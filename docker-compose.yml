@@ -1,0 +1,164 @@
+version: "3.8"
+services:
+  redis:
+    tty: true
+    image: elestio/redis:6.0
+    restart: "always"
+    command: "redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}"
+    volumes:
+      - ./data/redis:/var/lib/redis
+
+  postgres:
+    tty: true
+    image: elestio/postgres:14
+    restart: "always"
+    user: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "postgres"]
+      interval: 1s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - 172.17.0.1:19675:5432
+  zookeeper:
+    tty: true
+    platform: linux/amd64
+    image: wurstmeister/zookeeper:latest
+  kafka:
+    tty: true
+    image: wurstmeister/kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      TERM: "xterm-256color"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:19093,OUTSIDE://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:19093,OUTSIDE://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-topics.sh --bootstrap-server 127.0.0.1:19092 --describe",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  bulker:
+    tty: true
+    image: jitsucom/bulker:latest
+    platform: linux/amd64
+    restart: "always"
+    environment:
+      BULKER_HTTP_PORT: "3042"
+      TERM: "xterm-256color"
+      BULKER_KAFKA_BOOTSTRAP_SERVERS: "kafka:19093"
+      BULKER_AUTH_TOKENS: ${BULKER_PASSWORD}
+      BULKER_CONFIG_SOURCE: "redis"
+      REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
+      BULKER_INTERNAL_TASK_LOG: '{"id":"task_log","metricsKeyPrefix":"syncs","usesBulker":true,"type":"postgres","options":{"mode":"stream"},"credentials":{"host":"postgres","port":5432,"sslMode":"disable","database":"postgres","password":"${POSTGRES_PASSWORD}","username":"postgres","defaultSchema":"public"}}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3042/ready"]
+      interval: 2s
+      timeout: 10s
+      retries: 15
+    depends_on:
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+  syncctl:
+    tty: true
+    image: jitsucom/syncctl:latest
+    platform: linux/amd64
+    restart: "always"
+    environment:
+      HTTP_PORT: "3043"
+      TERM: "xterm-256color"
+      SYNCCTL_SYNCS_ENABLED: ${SYNCS_ENABLED}
+      SYNCCTL_AUTH_TOKENS: ${SYNCCTL_PASSWORD}
+      SYNCCTL_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
+      SYNCCTL_SIDECAR_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@${EXTERNAL_DATABASE_HOST}:${PG_PORT:-5437}/postgres"
+      SYNCCTL_BULKER_URL: "http://${EXTERNAL_BULKER_HOST}:${BULKER_PORT:-3045}"
+      SYNCCTL_BULKER_AUTH_TOKEN: ${BULKER_PASSWORD}
+      SYNCCTL_BULKER_LOGS_CONNECTION_ID: task_log
+    volumes:
+      - ./data/syncctl:/etc/syncctl
+    depends_on:
+      bulker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+  rotor:
+    tty: true
+    image: jitsucom/rotor:latest
+    platform: linux/amd64
+    restart: "always"
+    environment:
+      DISABLE_SERVICE_prisma: "true"
+      DISABLE_SERVICE_pg: "true"
+      BULKER_URL: "http://bulker:3042"
+      BULKER_AUTH_KEY: ${BULKER_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:19093"
+      REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
+    depends_on:
+      bulker:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+  console:
+    tty: true
+    image: jitsucom/console:latest
+    restart: "always"
+    platform: linux/amd64
+    environment:
+      ROTOR_URL: "http://rotor:3401"
+      BULKER_URL: "http://bulker:3042"
+      BULKER_AUTH_KEY: ${BULKER_PASSWORD}
+      DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
+      REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
+      TEST_CREDENTIALS: ${TEST_CREDENTIALS}
+      TEST_CREDENTIALS_SHOW_LOGIN: "true"
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      SYNCS_ENABLED: ${SYNCS_ENABLED:-false}
+      SYNCCTL_URL: "http://syncctl:3043"
+      SYNCCTL_AUTH_KEY: ${SYNCCTL_PASSWORD}
+      GOOGLE_SCHEDULER_KEY: ${GOOGLE_SCHEDULER_KEY}
+      GOOGLE_SCHEDULER_LOCATION: ${GOOGLE_SCHEDULER_LOCATION:-us-central1}
+      NEXTAUTH_URL: "${JITSU_PUBLIC_URL}"
+      UPDATE_DB: "true"
+    depends_on:
+      redis:
+        condition: service_started
+      bulker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "172.17.0.1:34887:3000"
+
+  pgadmin4:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${ADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 8080
+    ports:
+      - "172.17.0.1:63528:8080"
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
