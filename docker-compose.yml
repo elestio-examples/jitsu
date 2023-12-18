@@ -37,7 +37,7 @@ services:
 
   bulker:
     tty: true
-    image: jitsucom/bulker:latest
+    image: jitsucom/bulker:${SOFTWARE_VERSION_TAG}
     platform: linux/amd64
     restart: "always"
     environment:
@@ -53,7 +53,7 @@ services:
       - kafka
   syncctl:
     tty: true
-    image: jitsucom/syncctl:latest
+    image: jitsucom/syncctl:${SOFTWARE_VERSION_TAG}
     platform: linux/amd64
     restart: "always"
     environment:
@@ -75,7 +75,7 @@ services:
       - postgres
   rotor:
     tty: true
-    image: jitsucom/rotor:latest
+    image: jitsucom/rotor:${SOFTWARE_VERSION_TAG}
     platform: linux/amd64
     restart: "always"
     environment:
@@ -91,7 +91,7 @@ services:
       - redis
   console:
     tty: true
-    image: jitsucom/console:latest
+    image: jitsucom/console:${SOFTWARE_VERSION_TAG}
     restart: "always"
     platform: linux/amd64
     environment:
