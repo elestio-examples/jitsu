@@ -37,6 +37,10 @@ environments:
     value: "https://[CI_CD_DOMAIN]"
   - key: "SYNCS_ENABLED"
     value: "false"
+  - key: "GITHUB_CLIENT_ID"
+    value: "YOUR_GITHUB_CLIENT_ID"
+  - key: "GITHUB_CLIENT_SECRET"
+    value: "YOUR_GITHUB_CLIENT_SECRET"
 
 config:
   runTime: "dockerCompose"
