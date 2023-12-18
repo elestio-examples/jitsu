@@ -31,8 +31,6 @@ You'll need to create a GitHub OAuth application to get those values:
 You can open Jitsu UI here:
 
     URL: https://[CI_CD_DOMAIN]
-    email: [ADMIN_EMAIL]
-    password: [ADMIN_PASSWORD]
 
 You can open PgAdmin web UI here:
 
