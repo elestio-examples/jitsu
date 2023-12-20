@@ -38,13 +38,37 @@ You can open PgAdmin web UI here:
     email: [ADMIN_EMAIL]
     password: [ADMIN_PASSWORD]
 
-# syncctl
+# Connectors
+
+If you want to use Jitsu connectors, you will need a Kubernetes cluster.
+
+## Kubernetes
+
+If you don't have aready a Kubernetes cluster, you can deploy a new one on Elestio.
+
+To do that, deploy a new instance Microk8s by clicking on this link: https://elest.io/open-source/microk8s.
+
+Once deploy, you can connect over VS Code to generate a new kubeconfig file with this command in the terminal:
+
+    microk8s config > kubeconfig
+
+After the generation of the kubeconfig file, kindly proceed to edit the file by replacing the server IP value with your Global Private IP. For instance, following the generation, the configuration may resemble the following:
+
+    server: https://10.68.72.19:16443
+
+Subsequently, substitute the `10.68.72.19` placeholder with your specific Global Private IP, as identified in the overview tab.
+
+Upon completion of the aforementioned steps, please proceed to download the modified kubeconfig file. Subsequently, paste the downloaded file into the VS Code window of your Jitsu instance (`/opt/app/`).
+
+## syncctl
 
 To use syncctl, you'll have to copy your `kubeconfig` file from your kubernetes instance and paste it in the root of your Jitsu project.
 Then, uncomment in the docker-compose.yml file
 
     SYNCCTL_KUBERNETES_CLIENT_CONFIG: "/kubeconfig"
     - ./kubeconfig:/kubeconfig
+
+Furthermore, ensure that you set the SYNCS_ENABLED parameter to `true` within your environment (ENV) file.
 
 then, run the following command:
 
