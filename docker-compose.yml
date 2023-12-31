@@ -51,6 +51,8 @@ services:
     depends_on:
       - redis
       - kafka
+    ports:
+      - 172.17.0.1:9773:3042
   syncctl:
     tty: true
     image: jitsucom/syncctl:${SOFTWARE_VERSION_TAG}
@@ -63,10 +65,12 @@ services:
       SYNCCTL_AUTH_TOKENS: ${SYNCCTL_PASSWORD}
       SYNCCTL_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
       SYNCCTL_SIDECAR_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@${EXTERNAL_DATABASE_HOST}:${PG_PORT:-5437}/postgres"
-      SYNCCTL_BULKER_URL: "http://${EXTERNAL_BULKER_HOST}:${BULKER_PORT:-3045}"
+      SYNCCTL_BULKER_URL: "https://${DOMAIN}:31088"
       SYNCCTL_BULKER_AUTH_TOKEN: ${BULKER_PASSWORD}
       SYNCCTL_BULKER_LOGS_CONNECTION_ID: task_log
       # SYNCCTL_KUBERNETES_CLIENT_CONFIG: "/kubeconfig"
+      EXTERNAL_BULKER_HOST: ${DOMAIN}:31088
+      EXTERNAL_DATABASE_HOST: ${DOMAIN}:41863
     volumes:
       - ./data/syncctl:/etc/syncctl
       # - ./kubeconfig:/kubeconfig
@@ -85,6 +89,7 @@ services:
       BULKER_AUTH_KEY: ${BULKER_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: "kafka:19093"
       REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
+      CONFIG_STORE_DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
     depends_on:
       - bulker
       - kafka

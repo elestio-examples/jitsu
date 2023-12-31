@@ -15,6 +15,14 @@ ports:
     public: true
     path: "/"
     isAuth: false
+  - protocol: "HTTPS"
+    targetProtocol: "HTTP"
+    listeningPort: "31088"
+    targetPort: "9773"
+    targetIP: "172.17.0.1"
+    public: true
+    path: "/"
+    isAuth: false
   - protocol: "TCP"
     targetProtocol: "TCP"
     listeningPort: "41863"
