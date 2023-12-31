@@ -64,13 +64,11 @@ services:
       SYNCCTL_SYNCS_ENABLED: ${SYNCS_ENABLED}
       SYNCCTL_AUTH_TOKENS: ${SYNCCTL_PASSWORD}
       SYNCCTL_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
-      SYNCCTL_SIDECAR_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@${EXTERNAL_DATABASE_HOST}:${PG_PORT:-5437}/postgres"
-      SYNCCTL_BULKER_URL: "https://${DOMAIN}:31088"
+      SYNCCTL_SIDECAR_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@${EXTERNAL_DATABASE_HOST}/postgres"
+      SYNCCTL_BULKER_URL: "https://${EXTERNAL_BULKER_HOST}"
       SYNCCTL_BULKER_AUTH_TOKEN: ${BULKER_PASSWORD}
       SYNCCTL_BULKER_LOGS_CONNECTION_ID: task_log
       # SYNCCTL_KUBERNETES_CLIENT_CONFIG: "/kubeconfig"
-      EXTERNAL_BULKER_HOST: ${DOMAIN}:31088
-      EXTERNAL_DATABASE_HOST: ${DOMAIN}:41863
     volumes:
       - ./data/syncctl:/etc/syncctl
       # - ./kubeconfig:/kubeconfig
