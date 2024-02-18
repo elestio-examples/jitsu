@@ -17,6 +17,14 @@ ports:
     isAuth: false
   - protocol: "HTTPS"
     targetProtocol: "HTTP"
+    listeningPort: "19025"
+    targetPort: "35210"
+    targetIP: "172.17.0.1"
+    public: true
+    path: "/"
+    isAuth: false
+  - protocol: "HTTPS"
+    targetProtocol: "HTTP"
     listeningPort: "31088"
     targetPort: "9773"
     targetIP: "172.17.0.1"
@@ -55,6 +63,12 @@ environments:
     value: "YOUR_GITHUB_CLIENT_ID"
   - key: "GITHUB_CLIENT_SECRET"
     value: "YOUR_GITHUB_CLIENT_SECRET"
+  - key: "CONSOLE_TOKEN"
+    value: "random_password"
+  - key: "BULKER_TOKEN"
+    value: "random_password"
+  - key: "SYNCCTL_TOKEN"
+    value: "random_password"
 
 config:
   runTime: "dockerCompose"
@@ -76,6 +90,8 @@ lifeCycleConfig:
 webUI:
   - url: "https://[CI_CD_DOMAIN]"
     label: "Jitsu"
+    login: "[ADMIN_EMAIL]"
+    password: "[ADMIN_PASSWORD]"
   - url: "https://[CI_CD_DOMAIN]:25538"
     label: "PgAdmin"
     login: "[ADMIN_EMAIL]"
