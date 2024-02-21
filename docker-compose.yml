@@ -67,7 +67,8 @@ services:
     image: curlimages/curl
     environment:
       CONSOLE_TOKEN: ${CONSOLE_TOKEN}
-    command: "sleep 30s && curl --silent --output nul --show-error -H 'Authorization: Bearer service-admin-account:${CONSOLE_TOKEN}' http://console:3000/api/admin/catalog-refresh?initial=true"
+    command: '/bin/sh -c ''sleep 30s && curl --silent --output nul --show-error -H "Authorization: Bearer service-admin-account:${CONSOLE_TOKEN}" http://console:3000/api/admin/catalog-refresh?initial=true'''
+
     depends_on:
       - console
 
