@@ -36,6 +36,7 @@ services:
     platform: linux/amd64
     environment:
       ROTOR_URL: "http://rotor:3401"
+      ROTOR_AUTH_KEY: ${BULKER_TOKEN:-default}
       BULKER_URL: "http://bulker:3042"
       CONSOLE_RAW_AUTH_TOKENS: ${CONSOLE_TOKEN}
       BULKER_AUTH_KEY: ${BULKER_TOKEN}
@@ -66,7 +67,7 @@ services:
     image: curlimages/curl
     environment:
       CONSOLE_TOKEN: ${CONSOLE_TOKEN}
-    command: "curl --silent --output nul --show-error -H 'Authorization: Bearer service-admin-account:${CONSOLE_TOKEN}' http://console:3000/api/admin/catalog-refresh?initial=true"
+    command: "sleep 30s && curl --silent --output nul --show-error -H 'Authorization: Bearer service-admin-account:${CONSOLE_TOKEN}' http://console:3000/api/admin/catalog-refresh?initial=true"
     depends_on:
       - console
 
@@ -97,8 +98,9 @@ services:
     platform: linux/amd64
     restart: "always"
     environment:
-      DISABLE_SERVICE_prisma: "true"
-      DISABLE_SERVICE_pg: "true"
+      # DISABLE_SERVICE_prisma: "true"
+      # DISABLE_SERVICE_pg: "true"
+      ROTOR_RAW_AUTH_TOKENS: ${BULKER_TOKEN:-default}
       BULKER_URL: "http://bulker:3042"
       BULKER_AUTH_KEY: ${BULKER_TOKEN}
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
@@ -127,6 +129,7 @@ services:
       INGEST_CACHE_DIR: "/tmp/cache"
       INGEST_REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
       INGEST_ROTOR_URL: "http://rotor:3401"
+      INGEST_ROTOR_AUTH_KEY: ${BULKER_TOKEN:-default}
     depends_on:
       - console
       - rotor
