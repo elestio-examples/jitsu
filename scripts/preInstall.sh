@@ -17,3 +17,5 @@ cat <<EOT > ./servers.json
     }
 }
 EOT
+
+sed -i "s~DOMAIN_TO_CHANGE~${DOMAIN}~g" ./docker-compose.yml

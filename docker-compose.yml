@@ -34,6 +34,8 @@ services:
     image: jitsucom/console:${SOFTWARE_VERSION_TAG}
     restart: "always"
     platform: linux/amd64
+    extra_hosts:
+      DOMAIN_TO_CHANGE: 172.17.0.1
     environment:
       ROTOR_URL: "http://rotor:3401"
       ROTOR_AUTH_KEY: ${BULKER_TOKEN:-default}
