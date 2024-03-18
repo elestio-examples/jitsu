@@ -19,6 +19,23 @@ services:
     volumes:
       - ./data/redis:/var/lib/redis
 
+  clickhouse:
+    tty: true
+    image: clickhouse/clickhouse-server:24.1
+    restart: "always"
+    environment:
+      - CLICKHOUSE_DB=newjitsu_metrics
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+
+  mongo:
+    image: mongo
+    restart: "always"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: default
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
   postgres:
     image: elestio/postgres:14
     restart: "always"
@@ -56,10 +73,14 @@ services:
       JITSU_INGEST_PUBLIC_URL: ${JITSU_PUBLIC_URL}:19025
       JITSU_PUBLIC_URL: ${JITSU_PUBLIC_URL}
       NEXTAUTH_URL: ${JITSU_PUBLIC_URL}
+      CLICKHOUSE_HOST: "clickhouse:8123"
+      CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD}"
+      CLICKHOUSE_DATABASE: "newjitsu_metrics"
       UPDATE_DB: "true"
     depends_on:
       - redis
-      - bulker
+      # - bulker
+      - clickhouse
       - postgres
     ports:
       - "172.17.0.1:34887:3000"
@@ -90,7 +111,7 @@ services:
       REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
       BULKER_INTERNAL_TASK_LOG: '{"id":"task_log","metricsKeyPrefix":"syncs","usesBulker":true,"type":"postgres","options":{"mode":"stream"},"credentials":{"host":"postgres","port":5432,"sslMode":"disable","database":"postgres","password":"${POSTGRES_PASSWORD}","username":"postgres","defaultSchema":"newjitsu"}}'
     depends_on:
-      - redis
+      - console
       - kafka
     ports:
       - 172.17.0.1:9773:3042
@@ -111,9 +132,14 @@ services:
       REPOSITORY_BASE_URL: "http://console:3000/api/admin/export/"
       REPOSITORY_AUTH_TOKEN: "service-admin-account:${CONSOLE_TOKEN}"
       REPOSITORY_CACHE_DIR: "/tmp/cache"
+      MONGODB_URL: "mongodb://default:${MONGO_PASSWORD}@mongo/"
+      CLICKHOUSE_HOST: "clickhouse:8123"
+      CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD}"
+      CLICKHOUSE_DATABASE: "newjitsu_metrics"
     depends_on:
       - bulker
-      - kafka
+      - console
+      # - kafka
       - redis
 
   ingest:
@@ -133,6 +159,9 @@ services:
       INGEST_REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
       INGEST_ROTOR_URL: "http://rotor:3401"
       INGEST_ROTOR_AUTH_KEY: ${BULKER_TOKEN:-default}
+      INGEST_CLICKHOUSE_HOST: "clickhouse:9000"
+      INGEST_CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD}"
+      INGEST_CLICKHOUSE_DATABASE: "newjitsu_metrics"
     depends_on:
       - console
       - rotor

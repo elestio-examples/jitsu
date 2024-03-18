@@ -69,6 +69,10 @@ environments:
     value: "random_password"
   - key: "SYNCCTL_TOKEN"
     value: "random_password"
+  - key: "CLICKHOUSE_PASSWORD"
+    value: "random_password"
+  - key: "MONGO_PASSWORD"
+    value: "random_password"
 
 config:
   runTime: "dockerCompose"
