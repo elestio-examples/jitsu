@@ -1,7 +1,10 @@
 #set env vars
 set -o allexport; source .env; set +o allexport;
 
-sleep 30s;
+
+
+mkdir -p ./data
+chmod -R 777 ./data
 
 cat <<EOT > ./servers.json
 {
@@ -20,4 +23,3 @@ cat <<EOT > ./servers.json
 }
 EOT
 
-sed -i "s~DOMAIN_TO_CHANGE~${DOMAIN}~g" ./docker-compose.yml
