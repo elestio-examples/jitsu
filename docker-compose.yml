@@ -110,6 +110,9 @@ services:
       BULKER_CACHE_DIR: "/tmp/cache"
       REDIS_URL: "redis://default:${REDIS_PASSWORD}@redis:6379"
       BULKER_INTERNAL_TASK_LOG: '{"id":"task_log","metricsKeyPrefix":"syncs","usesBulker":true,"type":"postgres","options":{"mode":"stream"},"credentials":{"host":"postgres","port":5432,"sslMode":"disable","database":"postgres","password":"${POSTGRES_PASSWORD}","username":"postgres","defaultSchema":"newjitsu"}}'
+      BULKER_CLICKHOUSE_HOST: "clickhouse:9000"
+      BULKER_CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD}"
+      BULKER_CLICKHOUSE_DATABASE: "newjitsu_metrics"
     depends_on:
       - console
       - kafka
